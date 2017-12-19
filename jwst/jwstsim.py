@@ -7,11 +7,21 @@ import matplotlib.pyplot as plt
 
 
 
-def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, inst_modes='all' ):
+def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, inst_modes='all', outdir='.' ):
+    t1 = time.time()
 
+    # Prepare the output directory:
+    if outdir=='.':
+        outdir = os.getcwd()
+    odirfull = os.path.join( outdir, planet_label )
+    if os.path.isdir( odirfull )==False:
+        os.makedirs( odirfull )
+
+    # Identify the tepcat index:
     ix = ( tepcat['names']==planet_label )
-    z = jdi.load_exo_dict()
 
+    # Prepare the PandExo inputs:
+    z = jdi.load_exo_dict()
     z['observation']['sat_level'] = 80 # saturation level
     z['observation']['sat_unit'] = '%' # saturation level unit
     z['observation']['noccultations'] = 1 # number of transits
@@ -28,29 +38,31 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     z['planet']['w_unit'] = 'um' # wavelength unit is micron; other options include 'Angs', secs" (for phase curves)
     z['planet']['f_unit'] = 'fp/f*'               #options are 'rp^2/r*^2' or 'fp/f*'
     z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60.   #transit duration in seconds
-
-    # Load a null spectrum for the planet:
-    z['planet']['exopath'] = 'zeros.txt'
+    z['planet']['exopath'] = 'zeros.txt' # load a null spectrum for the planet
 
     # Run PandExo over requested instrument modes:
     if inst_modes=='all':
-        inst_modes = jdi.print_instruments()
-    y = jdi.run_pandexo( z, inst_modes )
+        inst_modes = list( jdi.ALL.keys() )
+    nmodes = len( inst_modes )
 
-    # Extract output (TODO properly)
-    x1,y1,e1 = jpi.jwst_1d_spec(y, R=100)
-
-    data1 = np.transpose([x1[0], y1[0], e1[0]])
-
-
-    plt.figure()
-    ax = plt.axes()
-
-    data1 = data1[data1[:,2] < 0.01] #Masks values with very high errors
-    ax.errorbar(data1[:,0], data1[:,1], yerr=data1[:,2], ms=3, linestyle='None', marker='s', capsize=0, markeredgewidth=0)
-
-    plt.show()
-    pdb.set_trace()
+    if nmodes==1:
+        modestr = '{0} instrument mode:\n'.format( nmodes )
+    else:
+        modestr = '{0} instrument modes:\n'.format( nmodes )
+    for m in inst_modes: modestr += '{0}, '.format( m )
+    print( '\n{0}\nRunning PandExo for {1}\n{2}\n{0}\n'.format( 50*'#', planet_label, modestr[:-2] ) )
+    #print( '{0}\n'.format( modesstr[:-2] ) )
+    for k in range( nmodes ):
+        oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+        opath = os.path.join( odirfull, oname )
+        y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
+        wav = y['FinalSpectrum']['wave']
+        err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
+        outp = np.column_stack( [ wav, err ] )
+        np.savetxt( opath, outp )
+        print( '\nSaved noise: {0}'.format( opath ) )
+    t2 = time.time()
+    print( 'Total time taken = {0:.2f} minutes'.format( (t2-t1)/60. ) )
     return None
 
 

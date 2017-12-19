@@ -142,9 +142,7 @@ def load():
     tepcat['rhoplanet'] = rhoplanet[ixs]
     tepcat['tdurs'] = tdurs[ixs]
     tepcat['tdepths'] = tdepths[ixs]
-    keys = list( tepcat.keys() )
-    for k in keys:
-        print( k, np.shape( tepcat[k] ) )
+    print( '\nFinished reading TEPCat.\n' )
     return tepcat
 
 
