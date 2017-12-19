@@ -11,8 +11,9 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     t1 = time.time()
 
     # Prepare the output directory:
+    cwd = os.getcwd()
     if outdir=='.':
-        outdir = os.getcwd()
+        outdir = cwd
     odirfull = os.path.join( outdir, planet_label )
     if os.path.isdir( odirfull )==False:
         os.makedirs( odirfull )
@@ -38,7 +39,10 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     z['planet']['w_unit'] = 'um' # wavelength unit is micron; other options include 'Angs', secs" (for phase curves)
     z['planet']['f_unit'] = 'fp/f*'               #options are 'rp^2/r*^2' or 'fp/f*'
     z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60.   #transit duration in seconds
-    z['planet']['exopath'] = 'zeros.txt' # load a null spectrum for the planet
+    # Use a null spectrum for the planet:
+    z['planet']['exopath'] = get_nullpath()
+    if os.path.isfile( z['planet']['exopath'] )==False:
+        generate_nullspec()
 
     # Run PandExo over requested instrument modes:
     if inst_modes=='all':
@@ -66,3 +70,13 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     return None
 
 
+def generate_nullspec():
+    n = int( 1e4 )
+    x = np.linspace( 0.2, 40, n )
+    y = np.zeros( n )
+    nullpath = get_nullpath()
+    np.savetxt( nullpath, np.column_stack( [ x, y ] ) )
+    return nullpath
+
+def get_nullpath():
+    return os.path.join( os.getcwd(), 'zeros.txt' )
