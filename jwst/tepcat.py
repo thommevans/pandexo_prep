@@ -2,6 +2,9 @@ from __future__ import print_function
 import pdb, sys, os
 import numpy as np
 
+HPLANCK_SI = 6.62607e-34 # planck's constant in J*s
+C_SI = 2.99792e8 # speed of light in vacuum in m s^-1
+KB_SI = 1.3806488e-23 # boltzmann constant in J K^-1
 G_SI = 6.67428e-11 # gravitational constant in m^3 kg^-1 s^-2
 DAY_SI = 24*60*60 # day in seconds
 RSUN_SI = 6.9551e8 # solar radius in m
@@ -9,6 +12,8 @@ MSUN_SI = 1.99e30 # solar mass in kg
 RJUP_SI = 7.1492e7 # jupiter radius in m
 MJUP_SI = 1.89852e27 # jupiter mass in kg
 AU_SI = 1.49598e11 # au to metres conversion factor
+RGAS_SI = 8.314 # gas constant in J mol^-1 K^-1
+MUJUP_SI = 2.22e-3 # jupiter atmosphere mean molecular weight in kg mole^-1
 
 def load():
     # Read contents of the first tepcat file into numpy arrays:
@@ -121,6 +126,30 @@ def load():
     tplanet = calc_teq( tstar, aRs, Ab=0, fprime=0.25 )
     RpRs = ( rplanet*RJUP_SI )/( rstar*RSUN_SI )
 
+    ##############################################
+    # Calculate and normalise the thermal signal assuming
+    # planet radiates as blackbody at equilibrium temperature:
+    nearir_um = 2.2
+    ecdepth_nearir = calc_ecdepth( tplanet, tstar, RpRs, nearir_um )
+    ix = ( names=='WASP-121' )
+    tref = tstar[ix]
+    kref = kmags[ix]
+    fratios_nearir = calc_fratio( nearir_um, tstar, kmags, tref, kref )
+    sn_em = ecdepth_nearir*np.sqrt( fratios_nearir )
+    sn_em /= sn_em[ix]
+
+
+    # Calculate and normalise the transmission signal
+    # assuming a hydrogen-dominated atmosphere:
+    hatm = RGAS_SI*tplanet/MUJUP_SI/littleg
+    hdepth = 2*hatm*(rplanet*RJUP_SI)/( ( rstar*RSUN_SI )**2. )
+    ix = ( names=='WASP-121' )
+    dkmag = kmags-kmags[ix]
+    fratio = 10**( -dkmag/2.5 )
+    sn_tr = hdepth*np.sqrt( fratio )
+    ##############################################
+
+
     ixs = ( vmags>0 )*( kmags>0 ) # restrict to those with reliable brightnesses
     tepcat = {}
     tepcat['names'] = names[ixs]
@@ -142,6 +171,15 @@ def load():
     tepcat['rhoplanet'] = rhoplanet[ixs]
     tepcat['tdurs'] = tdurs[ixs]
     tepcat['tdepths'] = tdepths[ixs]
+    tepcat['sn_tr'] = sn_tr[ixs]
+    tepcat['sn_em'] = sn_em[ixs]
+
+    # Sort in order of decreasing transmission signal:
+    ixs = np.argsort( tepcat['sn_tr'] )
+    keys = list( tepcat.keys() )
+    for k in keys:
+        tepcat[k] = tepcat[k][ixs][::-1]
+
     print( '\nFinished reading TEPCat.\n' )
     return tepcat
 
@@ -149,3 +187,32 @@ def load():
 def calc_teq( tstar, aRs, Ab=0, fprime=0.25 ):
     redist = fprime*( 1-Ab )
     return tstar*( np.sqrt( 1./aRs ) )*( redist**0.25 )
+
+def calc_ecdepth( tplanet, tstar, RpRs, wav_um ):
+    wav_m = wav_um*(1e-6)
+    bratio = planck( wav_m, tplanet )/planck( wav_m, tstar )
+    ecdepth = bratio*( RpRs**2. )    
+    return ecdepth
+
+def planck( wav_m, temp ):
+    """
+    Evaluates the Planck function for given values of wavelength
+    and temperature. Wavelength should be provided in metres and
+    temperature should be provided in Kelvins.
+    """
+    term1 = 2 * HPLANCK_SI * ( C_SI**2. ) / ( wav_m**5. )
+    term2 = np.exp( HPLANCK_SI * C_SI / KB_SI / wav_m / temp ) - 1
+    bbflux = term1 / term2
+    return bbflux
+
+def calc_fratio( wav_um, t, kmag, tref, kmagref ):
+    wav_m = wav_um*(1e-6)
+    k_m = 2.2e-6
+    bratio = planck( wav_m, t )/planck( k_m, t )
+    bratioref = planck( wav_m, tref )/planck( k_m, tref )
+    termA = bratio/bratioref
+    delk = kmag-kmagref
+    termB = 10**( -delk/2.5 )
+    return termA*termB
+
+
