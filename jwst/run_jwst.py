@@ -1,9 +1,9 @@
 import pdb
-#from pandexo_prep import tepcat, jwstsim
+#from pandexo_prep_dev.jwst import tepcat, jwstsim
 import tepcat, jwstsim
 
-#inst_modes = 'all' # will run on all modes
-inst_modes = ['NIRSpec G395H'] # just test one for now
+inst_modes = 'all' # will run on all modes
+#inst_modes = ['NIRSpec G395H'] # just test one for now
 z = tepcat.load()
 allnames = z['names']
 allnames = [ 'WASP-121', 'WASP-019' ] # temporary
