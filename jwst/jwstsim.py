@@ -47,6 +47,7 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     # Run PandExo over requested instrument modes:
     if inst_modes=='all':
         inst_modes = list( jdi.ALL.keys() )
+    inst_modes.remove( 'WFC3 G141' ) # remove HST modes
     nmodes = len( inst_modes )
 
     if nmodes==1:
