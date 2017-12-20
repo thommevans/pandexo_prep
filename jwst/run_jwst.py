@@ -7,7 +7,7 @@ Copy this script to your working directory. Edit the import
 statements to find the pandexo_prep routines on your system.
 
 Currently, you also need to download the following TEPCat
-catalogues and put them in the working directory also:
+catalogues and put them in the working directory:
   'For planning observations' --> save as 'tepcat1.txt'
   'Well-studied transiting planets' --> save as 'tepcat2.txt'
 
