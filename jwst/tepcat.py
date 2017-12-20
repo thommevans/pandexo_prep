@@ -16,6 +16,10 @@ RGAS_SI = 8.314 # gas constant in J mol^-1 K^-1
 MUJUP_SI = 2.22e-3 # jupiter atmosphere mean molecular weight in kg mole^-1
 
 def load():
+    """
+    Routine called by the run_jwst.py script to load the TEPCat catalogues into
+    a format that can be used by the routines in the jwstsim.py module.
+    """
     # Read contents of the first tepcat file into numpy arrays:
     ifile1 = open( 'tepcat1.txt', 'r' )
     header1 = ifile1.readline() # skip first header line
@@ -138,7 +142,6 @@ def load():
     sn_em = ecdepth_nearir*np.sqrt( fratios_nearir )
     sn_em /= sn_em[ix]
 
-
     # Calculate and normalise the transmission signal
     # assuming a hydrogen-dominated atmosphere:
     hatm = RGAS_SI*tplanet/MUJUP_SI/littleg
@@ -148,7 +151,6 @@ def load():
     fratio = 10**( -dkmag/2.5 )
     sn_tr = hdepth*np.sqrt( fratio )
     ##############################################
-
 
     ixs = ( vmags>0 )*( kmags>0 ) # restrict to those with reliable brightnesses
     tepcat = {}

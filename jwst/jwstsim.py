@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 
 
 def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, inst_modes='all', outdir='.' ):
+    """
+    Routine called by the run_jwst.py script to run PandExo over specified modes for specified planet.
+    """
     t1 = time.time()
 
     # Prepare the output directory:
@@ -72,6 +75,9 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
 
 
 def generate_nullspec():
+    """
+    Generates a null spectrum and saves it in the working directory.
+    """
     n = int( 1e4 )
     x = np.linspace( 0.2, 40, n )
     y = np.zeros( n )
@@ -80,4 +86,7 @@ def generate_nullspec():
     return nullpath
 
 def get_nullpath():
+    """
+    Returns the path of the null spectrum.
+    """
     return os.path.join( os.getcwd(), 'zeros.txt' )
