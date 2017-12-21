@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pdb, sys, os
 import numpy as np
+import urllib2
 
 HPLANCK_SI = 6.62607e-34 # planck's constant in J*s
 C_SI = 2.99792e8 # speed of light in vacuum in m s^-1
@@ -15,11 +16,21 @@ AU_SI = 1.49598e11 # au to metres conversion factor
 RGAS_SI = 8.314 # gas constant in J mol^-1 K^-1
 MUJUP_SI = 2.22e-3 # jupiter atmosphere mean molecular weight in kg mole^-1
 
-def load():
+def load(update=True):
     """
     Routine called by the run_jwst.py script to load the TEPCat catalogues into
     a format that can be used by the routines in the jwstsim.py module.
     """
+
+    if internet_on() and update==True:
+        print("TEPCat connection successful: Downloading latest tables")
+        download_tables()
+    elif not internet_on():
+        print("No internet connection to TEPCat: Using saved tables")
+    else:
+        print("Download not requested: Using saved tables")
+
+
     # Read contents of the first tepcat file into numpy arrays:
     ifile1 = open( 'tepcat1.txt', 'r' )
     header1 = ifile1.readline() # skip first header line
@@ -217,4 +228,19 @@ def calc_fratio( wav_um, t, kmag, tref, kmagref ):
     termB = 10**( -delk/2.5 )
     return termA*termB
 
+def internet_on():
+    try:
+        urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt', timeout=1)
+        return True
+    except urllib2.URLError as err:
+        return False
 
+def download_tables():
+    table = urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/observables.txt').read()
+    with open('tepcat1.txt', 'w') as f:
+        f.write(table)
+
+    table2 = urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt').read()
+    with open('tepcat2.txt', 'w') as g:
+        g.write(table2)
+    return 
