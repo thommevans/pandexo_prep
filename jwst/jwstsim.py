@@ -26,8 +26,8 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
 
     # Prepare the PandExo inputs:
     z = jdi.load_exo_dict()
-    z['observation']['sat_level'] = 80 # saturation level
-    z['observation']['sat_unit'] = '%' # saturation level unit
+    z['observation']['sat_level'] = sat_level # default to 80% for basic run
+    z['observation']['sat_unit'] = sat_unit
     z['observation']['noccultations'] = 1 # number of transits
     z['observation']['R'] = None # do not pre-bin the output spectra
     z['observation']['baseline'] = 1.0 # out-of-transit baseline quantity
@@ -40,8 +40,8 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     z['star']['metal'] = float( tepcat['metalstar'][ix] ) # stellar metallicity as log10( [Fe/H] )
     z['star']['logg'] = float( tepcat['loggstar'][ix] ) # stellar surface gravity as log10( g (c.g.s.) )
     z['planet']['w_unit'] = 'um' # wavelength unit is micron; other options include 'Angs', secs" (for phase curves)
-    z['planet']['f_unit'] = 'fp/f*'               #options are 'rp^2/r*^2' or 'fp/f*'
-    z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60.   #transit duration in seconds
+    z['planet']['f_unit'] = 'fp/f*' # options are 'rp^2/r*^2' or 'fp/f*'
+    z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60. # transit duration in seconds
     # Use a null spectrum for the planet:
     z['planet']['exopath'] = get_nullpath()
     if os.path.isfile( z['planet']['exopath'] )==False:
@@ -51,6 +51,10 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     if inst_modes=='all':
         inst_modes = list( jdi.ALL.keys() )
         inst_modes.remove( 'WFC3 G141' ) # remove HST modes
+    if 'WFC3 G141' in inst_modes:
+        pdb.set_trace() # this module is for JWST only, i.e. not WFC3 which requires batman etc.
+        # todo = write another module called wfc3sim.py to handle WFC3, or generalise this
+        # module to handle JWST and WFC3 and rename it noisesim.py or something.
     nmodes = len( inst_modes )
 
     if nmodes==1:
