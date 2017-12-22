@@ -16,7 +16,7 @@ Then there are two steps to edit below:
   2. Specify planets by setting 'planets' variable.
 """
 
-z = tepcat.load() # load the TEPCat catalogues
+z = tepcat.load( download_latest=True ) # load the TEPCat catalogues
 
 # 1. Specify a list of strings containing the JWST instrument
 #    modes that are recognised by PandExo, 

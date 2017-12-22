@@ -63,28 +63,23 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
         modestr = '{0} instrument modes:\n'.format( nmodes )
     for m in inst_modes: modestr += '{0}, '.format( m )
     print( '\n{0}\nRunning PandExo for {1}\n{2}\n{0}\n'.format( 50*'#', planet_label, modestr[:-2] ) )
-    #print( '{0}\n'.format( modesstr[:-2] ) )
 
     for k in range( nmodes ):
         oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-
         #G140 has two filters, need to run the second (non-default) manually
         if 'G140' in inst_modes[k]:
             g140 = jdi.load_mode_dict(inst_modes[k])
             g140['configuration']['instrument']['filter'] = 'f100lp'
             oname = '{0}-F100LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
             opath = os.path.join( odirfull, oname )
-
             y = jdi.run_pandexo( z, g140, save_file=False )
             wav = y['FinalSpectrum']['wave']
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
             outp = np.column_stack( [ wav, err ] )
             np.savetxt( opath, outp )
             print( '\nSaved noise: {0}'.format( opath ) )
-
             #Prepare name for default filter run
             oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-
         opath = os.path.join( odirfull, oname )
         y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
         wav = y['FinalSpectrum']['wave']

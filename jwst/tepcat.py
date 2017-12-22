@@ -1,7 +1,13 @@
 from __future__ import print_function
 import pdb, sys, os
 import numpy as np
-import urllib2
+try:
+    # For Python 3.0 and later:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+except ImportError:
+    # For earlier Python:
+    from urllib2 import urlopen, URLError
 
 HPLANCK_SI = 6.62607e-34 # planck's constant in J*s
 C_SI = 2.99792e8 # speed of light in vacuum in m s^-1
@@ -16,13 +22,13 @@ AU_SI = 1.49598e11 # au to metres conversion factor
 RGAS_SI = 8.314 # gas constant in J mol^-1 K^-1
 MUJUP_SI = 2.22e-3 # jupiter atmosphere mean molecular weight in kg mole^-1
 
-def load(update=True):
+def load( download_latest=True ):
     """
     Routine called by the run_jwst.py script to load the TEPCat catalogues into
     a format that can be used by the routines in the jwstsim.py module.
     """
 
-    if internet_on() and update==True:
+    if internet_on() and download_latest==True:
         print("TEPCat connection successful: Downloading latest tables")
         download_tables()
     elif not internet_on():
@@ -230,17 +236,17 @@ def calc_fratio( wav_um, t, kmag, tref, kmagref ):
 
 def internet_on():
     try:
-        urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt', timeout=1)
+        urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt', timeout=1)
         return True
-    except urllib2.URLError as err:
+    except URLError as err:
         return False
 
 def download_tables():
-    table = urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/observables.txt').read()
-    with open('tepcat1.txt', 'w') as f:
+    table = urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/observables.txt').read()
+    with open('tepcat1.txt', 'wb') as f:
         f.write(table)
 
-    table2 = urllib2.urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt').read()
-    with open('tepcat2.txt', 'w') as g:
+    table2 = urlopen('http://www.astro.keele.ac.uk/jkt/tepcat/allplanets-ascii.txt').read()
+    with open('tepcat2.txt', 'wb') as g:
         g.write(table2)
     return 
