@@ -77,7 +77,7 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
             outp = np.column_stack( [ wav, err ] )
             np.savetxt( opath, outp )
-            print( '\nSaved noise: {0}'.format( opath ) )
+            print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
             #Prepare name for default filter run
             oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         opath = os.path.join( odirfull, oname )
@@ -86,7 +86,7 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
         err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
         outp = np.column_stack( [ wav, err ] )
         np.savetxt( opath, outp )
-        print( '\nSaved noise: {0}'.format( opath ) )
+        print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
     t2 = time.time()
     print( 'Total time taken = {0:.2f} minutes'.format( (t2-t1)/60. ) )
     return None
