@@ -66,27 +66,40 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
 
     for k in range( nmodes ):
         oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+        oname_obs = '{0}.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         #G140 has two filters, need to run the second (non-default) manually
         if 'G140' in inst_modes[k]:
             g140 = jdi.load_mode_dict(inst_modes[k])
             g140['configuration']['instrument']['filter'] = 'f100lp'
             oname = '{0}-F100LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+            oname_obs = '{0}-F100LP.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
             opath = os.path.join( odirfull, oname )
+            opath_obs = os.path.join( odirfull, oname_obs)
             y = jdi.run_pandexo( z, g140, save_file=False )
             wav = y['FinalSpectrum']['wave']
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
             outp = np.column_stack( [ wav, err ] )
             np.savetxt( opath, outp )
             print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
+            with open(opath_obs, 'w') as f:
+            for key, value in y['timing'].items():
+                f.write('{}:  {}\n'.format(key, value))
+            print( '\nSaved observation parameters: {0}'.format(opath_obs))
             #Prepare name for default filter run
             oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+            oname_obs = '{0}-F070LP.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         opath = os.path.join( odirfull, oname )
+        opath_obs = os.path.join( odirfull, oname_obs)
         y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
         wav = y['FinalSpectrum']['wave']
         err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
         outp = np.column_stack( [ wav, err ] )
         np.savetxt( opath, outp )
         print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
+        with open(opath_obs, 'w') as f:
+            for key, value in y['timing'].items():
+                f.write('{}:  {}\n'.format(key, value))
+        print( '\nSaved observation parameters: {0}'.format(opath_obs))
     t2 = time.time()
     print( 'Total time taken = {0:.2f} minutes'.format( (t2-t1)/60. ) )
     return None
