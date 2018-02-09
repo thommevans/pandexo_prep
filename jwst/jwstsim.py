@@ -82,8 +82,8 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             np.savetxt( opath, outp )
             print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
             with open(opath_obs, 'w') as f:
-            for key, value in y['timing'].items():
-                f.write('{}:  {}\n'.format(key, value))
+                for key, value in y['timing'].items():
+                    f.write('{}:  {}\n'.format(key, value))
             print( '\nSaved observation parameters: {0}'.format(opath_obs))
             #Prepare name for default filter run
             oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
