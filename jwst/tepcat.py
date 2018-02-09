@@ -22,7 +22,7 @@ AU_SI = 1.49598e11 # au to metres conversion factor
 RGAS_SI = 8.314 # gas constant in J mol^-1 K^-1
 MUJUP_SI = 2.22e-3 # jupiter atmosphere mean molecular weight in kg mole^-1
 
-def load( download_latest=True ):
+def load( download_latest=True, quiet=False ):
     """
     Routine called by the run_jwst.py script to load the TEPCat catalogues into
     a format that can be used by the routines in the jwstsim.py module.
@@ -54,7 +54,7 @@ def load( download_latest=True ):
         tdurs1 += [ float( z[10] ) ]
         tdepths1 += [ float( z[11] ) ]
         periods1 += [ float( z[14] ) ]
-        print( names1[-1], periods1[-1] )
+        if quiet==False: print( names1[-1], periods1[-1] )
     ifile1.close()
     names1 = np.array( names1 )
     vmags1 = np.array( vmags1 )
@@ -114,7 +114,7 @@ def load( download_latest=True ):
     rhoplanet = np.array( rhoplanet )
     tplanet_tepcat = np.array( tplanet_tepcat )
     # Merge the two catalogues:
-    print( 'Merging both catalogues:' )
+    if quiet==False: print( 'Merging both catalogues:' )
     n = len( names2 )
     m = len( names1 )
     names = names2
@@ -131,7 +131,7 @@ def load( download_latest=True ):
                 tdurs[i] = tdurs1[j]
                 tdepths[i] = tdepths1[j]
                 periods[i] = periods1[j]
-                print( '... matched {0} --> {1}'.format( names[i], names1[j] ) )
+                if quiet==False: print( '... matched {0} --> {1}'.format( names[i], names1[j] ) )
                 break
         if j==m-1:
             print( 'Could not match {0}!'.format( names[i] ) )
@@ -173,6 +173,7 @@ def load( download_latest=True ):
     tepcat = {}
     tepcat['names'] = names[ixs]
     tepcat['a'] = a[ixs]
+    tepcat['aRs'] = aRs[ixs]
     tepcat['periods'] = periods[ixs]
     tepcat['mplanet'] = mplanet[ixs]
     tepcat['RpRs'] = RpRs[ixs]
@@ -190,6 +191,8 @@ def load( download_latest=True ):
     tepcat['rhoplanet'] = rhoplanet[ixs]
     tepcat['tdurs'] = tdurs[ixs]
     tepcat['tdepths'] = tdepths[ixs]
+    tepcat['hdepth'] = hdepth[ixs]
+    tepcat['hatm'] = hatm[ixs]
     tepcat['sn_tr'] = sn_tr[ixs]
     tepcat['sn_em'] = sn_em[ixs]
 
