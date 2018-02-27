@@ -80,7 +80,7 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
             outp = np.column_stack( [ wav, err ] )
             np.savetxt( opath, outp )
-            print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
+            print( '\nSaved noise: {0}'.format( opath ) )
             with open(opath_obs, 'w') as f:
                 for key, value in y['timing'].items():
                     f.write('{}:  {}\n'.format(key, value))
@@ -97,9 +97,16 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
         np.savetxt( opath, outp )
         print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
         with open(opath_obs, 'w') as f:
+            f.write( 'SETUP\n{0}\n'.format( 50*'-' ) )
+            ikeys = [ 'Instrument', 'Mode', 'Aperture', 'Disperser', 'Subarray', 'Readmode', 'Filter' ]
+            for key in ikeys:
+                f.write( '{}:  {}\n'.format( key, y['input'][key] ) )
+            f.write( '\nEXPOSURES\n{0}\n'.format( 50*'-' ) )
             for key, value in y['timing'].items():
                 f.write('{}:  {}\n'.format(key, value))
-        print( '\nSaved observation parameters: {0}'.format(opath_obs))
+        f.close()
+        print( '\nSaved observation parameters: {0}\n{1}\n'.format( opath_obs, 50*'#' ) )
+
     t2 = time.time()
     print( 'Total time taken = {0:.2f} minutes'.format( (t2-t1)/60. ) )
     return None
