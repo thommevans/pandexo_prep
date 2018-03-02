@@ -39,9 +39,13 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     z['star']['temp'] = float( tepcat['tstar'][ix] ) # stellar effective temperature in Kelvin
     z['star']['metal'] = float( tepcat['metalstar'][ix] ) # stellar metallicity as log10( [Fe/H] )
     z['star']['logg'] = float( tepcat['loggstar'][ix] ) # stellar surface gravity as log10( g (c.g.s.) )
+    z['star']['r_unit'] = 'R_sun' # stellar radius unit
+    z['planet']['r_unit'] = 'R_jup' # planet radius unit
     z['planet']['w_unit'] = 'um' # wavelength unit is micron; other options include 'Angs', secs" (for phase curves)
     z['planet']['f_unit'] = 'fp/f*' # options are 'rp^2/r*^2' or 'fp/f*'
     z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60. # transit duration in seconds
+    z['planet']['td_unit'] = 's' # transit duration unit
+    
     # Use a null spectrum for the planet:
     z['planet']['exopath'] = get_nullpath()
     if os.path.isfile( z['planet']['exopath'] )==False:
