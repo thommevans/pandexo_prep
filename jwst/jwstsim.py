@@ -69,8 +69,6 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     print( '\n{0}\nRunning PandExo for {1}\n{2}\n{0}\n'.format( 50*'#', planet_label, modestr[:-2] ) )
 
     for k in range( nmodes ):
-        oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-        oname_obs = '{0}.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         #G140 has two filters, need to run the second (non-default) manually
         if 'G140' in inst_modes[k]:
             g140 = jdi.load_mode_dict(inst_modes[k])
@@ -82,32 +80,29 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             y = jdi.run_pandexo( z, g140, save_file=False )
             wav = y['FinalSpectrum']['wave']
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
-            outp = np.column_stack( [ wav, err ] )
-            np.savetxt( opath, outp )
-            print( '\nSaved noise: {0}'.format( opath ) )
-            with open(opath_obs, 'w') as f:
-                for key, value in y['timing'].items():
-                    f.write('{}:  {}\n'.format(key, value))
-            print( '\nSaved observation parameters: {0}'.format(opath_obs))
-            #Prepare name for default filter run
-            oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-            oname_obs = '{0}-F070LP.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-        opath = os.path.join( odirfull, oname )
-        opath_obs = os.path.join( odirfull, oname_obs)
-        y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
-        wav = y['FinalSpectrum']['wave']
-        err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
+        else:
+            oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+            oname_obs = '{0}.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+            opath = os.path.join( odirfull, oname )
+            opath_obs = os.path.join( odirfull, oname_obs)
+            y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
+            wav = y['FinalSpectrum']['wave']
+            err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
+
         outp = np.column_stack( [ wav, err ] )
         np.savetxt( opath, outp )
         print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
         with open(opath_obs, 'w') as f:
-            f.write( 'SETUP\n{0}\n'.format( 50*'-' ) )
+            f.write( '\nWARNINGS\n{0}\n'.format( 50*'-' ) )
+            for key, value in y['warning'].items():
+                f.write( '*** {0}\n--> {1}\n'.format( key, value ) )
+            f.write( '\nSETUP\n{0}'.format( 50*'-' ) )
             ikeys = [ 'Instrument', 'Mode', 'Aperture', 'Disperser', 'Subarray', 'Readmode', 'Filter' ]
             for key in ikeys:
-                f.write( '{}:  {}\n'.format( key, y['input'][key] ) )
+                f.write( '{0}:  {1}\n'.format( key, y['input'][key] ) )
             f.write( '\nEXPOSURES\n{0}\n'.format( 50*'-' ) )
             for key, value in y['timing'].items():
-                f.write('{}:  {}\n'.format(key, value))
+                f.write('{0}:  {1}\n'.format(key, value))
         f.close()
         print( '\nSaved observation parameters: {0}\n{1}\n'.format( opath_obs, 50*'#' ) )
 
