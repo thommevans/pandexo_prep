@@ -23,6 +23,9 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
 
     # Identify the tepcat index:
     ix = ( tepcat['names']==planet_label )
+    if ix.sum()==0:
+        print( 'Could not match {0} to any TEPCat planets - skipping'.format( planet_label ) )
+        return None
 
     # Prepare the PandExo inputs:
     z = jdi.load_exo_dict()
@@ -71,6 +74,7 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     for k in range( nmodes ):
         #G140 has two filters, need to run the second (non-default) manually
         if 'G140' in inst_modes[k]:
+            #G140 non-default:
             g140 = jdi.load_mode_dict(inst_modes[k])
             g140['configuration']['instrument']['filter'] = 'f100lp'
             oname = '{0}-F100LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
@@ -80,35 +84,52 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             y = jdi.run_pandexo( z, g140, save_file=False )
             wav = y['FinalSpectrum']['wave']
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
+            outp = np.column_stack( [ wav, err ] )
+            np.savetxt( opath, outp )
+            #print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
+            print( '\nSaved noise: {0}'.format( opath, 50*'#' ) )
+            save_obspar( opath_obs, y )
+            #G140 prepare default:
+            oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+            oname_obs = '{0}-F070LP.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         else:
             oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
             oname_obs = '{0}.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-            opath = os.path.join( odirfull, oname )
-            opath_obs = os.path.join( odirfull, oname_obs)
-            y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
-            wav = y['FinalSpectrum']['wave']
-            err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
-
+        opath = os.path.join( odirfull, oname )
+        opath_obs = os.path.join( odirfull, oname_obs)
+        y = jdi.run_pandexo( z, [inst_modes[k]], save_file=False )
+        wav = y['FinalSpectrum']['wave']
+        err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
         outp = np.column_stack( [ wav, err ] )
         np.savetxt( opath, outp )
-        print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
-        with open(opath_obs, 'w') as f:
-            f.write( '\nWARNINGS\n{0}\n'.format( 50*'-' ) )
-            for key, value in y['warning'].items():
-                f.write( '*** {0}\n--> {1}\n'.format( key, value ) )
-            f.write( '\nSETUP\n{0}'.format( 50*'-' ) )
-            ikeys = [ 'Instrument', 'Mode', 'Aperture', 'Disperser', 'Subarray', 'Readmode', 'Filter' ]
-            for key in ikeys:
-                f.write( '{0}:  {1}\n'.format( key, y['input'][key] ) )
-            f.write( '\nEXPOSURES\n{0}\n'.format( 50*'-' ) )
-            for key, value in y['timing'].items():
-                f.write('{0}:  {1}\n'.format(key, value))
-        f.close()
-        print( '\nSaved observation parameters: {0}\n{1}\n'.format( opath_obs, 50*'#' ) )
+        print( '\nSaved noise: {0}'.format( opath, 50*'#' ) )
+        save_obspar( opath_obs, y )
 
     t2 = time.time()
     print( 'Total time taken = {0:.2f} minutes'.format( (t2-t1)/60. ) )
     return None
+
+
+def save_obspar( opath, y ):
+    with open( opath, 'w' ) as f:
+        if y['warning']['Saturated?']=='All good':
+            f.write( 'NOT SATURATED\n' )
+        else:
+            f.write( 'SATURATED\n(see warning below)\n' )
+        f.write( '\nWARNINGS\n{0}\n'.format( 50*'-' ) )
+        for key, value in y['warning'].items():
+            f.write( '*** {0}\n--> {1}\n'.format( key, value ) )
+        f.write( '\nSETUP\n{0}'.format( 50*'-' ) )
+        ikeys = [ 'Instrument', 'Mode', 'Aperture', 'Disperser', 'Subarray', 'Readmode', 'Filter' ]
+        for key in ikeys:
+            f.write( '{0}:  {1}\n'.format( key, y['input'][key] ) )
+        f.write( '\nEXPOSURES\n{0}\n'.format( 50*'-' ) )
+        for key, value in y['timing'].items():
+            f.write('{0}:  {1}\n'.format(key, value))
+    f.close()
+    print( '\nSaved observation parameters: {0}\n{1}\n'.format( opath, 50*'#' ) )
+    return None
+    
 
 
 def generate_nullspec():
