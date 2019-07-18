@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 
 
 
-def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, inst_modes='all', outdir='.' ):
+def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, \
+          inst_modes='all', outdir='.' ):
     """
-    Routine called by the run_jwst.py script to run PandExo over specified modes for specified planet.
+    Routine called by the run_jwst.py script to run PandExo over specified 
+    modes for specified planet.
     """
     t1 = time.time()
 
@@ -46,8 +48,10 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     z['planet']['r_unit'] = 'R_jup' # planet radius unit
     z['planet']['w_unit'] = 'um' # wavelength unit is micron; other options include 'Angs', secs" (for phase curves)
     z['planet']['f_unit'] = 'fp/f*' # options are 'rp^2/r*^2' or 'fp/f*'
-    z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60. # transit duration in seconds
-    z['planet']['td_unit'] = 's' # transit duration unit
+    #z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] )*24.*60.*60. # transit duration in seconds
+    #z['planet']['td_unit'] = 's' # transit duration unit
+    z['planet']['transit_duration'] = float( tepcat['tdurs'][ix] ) # transit duration in days
+    z['planet']['td_unit'] = 'd' # transit duration unit
     
     # Use a null spectrum for the planet:
     z['planet']['exopath'] = get_nullpath()
@@ -58,10 +62,6 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     if inst_modes=='all':
         inst_modes = list( jdi.ALL.keys() )
         inst_modes.remove( 'WFC3 G141' ) # remove HST modes
-    if 'WFC3 G141' in inst_modes:
-        pdb.set_trace() # this module is for JWST only, i.e. not WFC3 which requires batman etc.
-        # todo = write another module called wfc3sim.py to handle WFC3, or generalise this
-        # module to handle JWST and WFC3 and rename it noisesim.py or something.
     nmodes = len( inst_modes )
 
     if nmodes==1:
@@ -72,9 +72,10 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
     print( '\n{0}\nRunning PandExo for {1}\n{2}\n{0}\n'.format( 50*'#', planet_label, modestr[:-2] ) )
 
     for k in range( nmodes ):
-        #G140 has two filters, need to run the second (non-default) manually
+        # G140 has two filters, need to run the second (non-default) manually; the first
+        # is run by default when inst_modes[k] string passed to run_pandexo() below:
         if 'G140' in inst_modes[k]:
-            #G140 non-default:
+            # G140 non-default:
             g140 = jdi.load_mode_dict(inst_modes[k])
             g140['configuration']['instrument']['filter'] = 'f100lp'
             oname = '{0}-F100LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
@@ -86,10 +87,9 @@ def main( planet_label, tepcat, sat_level=80, sat_unit='%', noise_floor_ppm=20, 
             err = y['FinalSpectrum']['error_w_floor']*( 1e6 )
             outp = np.column_stack( [ wav, err ] )
             np.savetxt( opath, outp )
-            #print( '\nSaved noise: {0}\n{1}\n'.format( opath, 50*'#' ) )
             print( '\nSaved noise: {0}'.format( opath, 50*'#' ) )
             save_obspar( opath_obs, y )
-            #G140 prepare default:
+            # G140 prepare default:
             oname = '{0}-F070LP.txt'.format( inst_modes[k].replace( ' ', '-' ) )
             oname_obs = '{0}-F070LP.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
         else:
