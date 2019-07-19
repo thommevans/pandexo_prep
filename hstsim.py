@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 
 
 
-def main( planetdict, sat_level=80, sat_unit='%', noise_floor_ppm=20, useFirstOrbit=False, \
-          inst_modes=['WFC3 G141'], scan='Round Trip', nchan=14, outdir='.' ):
+def main( planetdict, sat_level=80, sat_unit='%', noise_floor_ppm=20, \
+          useFirstOrbit=False, inst_modes=['WFC3 G141'], scan='Round Trip', \
+          subarray='GRISM512', nchan=14, norb='optimize', outdir='.' ):
     """
     Routine called by the run_jwst.py script to run PandExo over specified 
     modes for specified planet.
@@ -75,12 +76,16 @@ def main( planetdict, sat_level=80, sat_unit='%', noise_floor_ppm=20, useFirstOr
             s3 = 'Fscan'
         else:
             pdb.set_trace()
-        oname = '{0}.{1}.{2}.txt'.format( s1, s2, s3 )
+        oname = '{0}.{1}.{2}.{3}.txt'.format( s1, subarray, s2, s3 )
         oname_obs = oname.replace( '.txt', '.obspar.txt' )
         opath = os.path.join( odirfull, oname )
         opath_obs = os.path.join( odirfull, oname_obs)
         wfc3 = jdi.load_mode_dict( inst_modes[k] )
+        wfc3['configuration']['detector']['subarray'] = subarray
         wfc3['strategy']['calculateRamp'] = useFirstOrbit
+        wfc3['strategy']['useFirstOrbit'] = useFirstOrbit
+        if norb is not 'optimize':
+            wfc3['strategy']['norbits'] = norb
         if useFirstOrbit==True:
             wfc3['strategy']['norbits'] = norb
         else:
