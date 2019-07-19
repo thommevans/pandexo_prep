@@ -64,8 +64,19 @@ def main( planetdict, sat_level=80, sat_unit='%', noise_floor_ppm=20, useFirstOr
     print( '\n{0}\nRunning PandExo for {1}\n{2}\n{0}\n'.format( 50*'#', planet_label, modestr[:-2] ) )
 
     for k in range( nmodes ):
-        oname = '{0}.txt'.format( inst_modes[k].replace( ' ', '-' ) )
-        oname_obs = '{0}.obspar.txt'.format( inst_modes[k].replace( ' ', '-' ) )
+        s1 = inst_modes[k].replace( ' ', '-' )
+        if useFirstOrbit==True:
+            s2 = 'keepFirstOrbit'
+        else:
+            s2 = 'dropFirstOrbit'
+        if scan=='Round Trip':
+            s3 = 'RTscan'
+        elif scan=='Forward':
+            s3 = 'Fscan'
+        else:
+            pdb.set_trace()
+        oname = '{0}.{1}.{2}.txt'.format( s1, s2, s3 )
+        oname_obs = oname.replace( '.txt', '.obspar.txt' )
         opath = os.path.join( odirfull, oname )
         opath_obs = os.path.join( odirfull, oname_obs)
         wfc3 = jdi.load_mode_dict( inst_modes[k] )
@@ -93,8 +104,8 @@ def main( planetdict, sat_level=80, sat_unit='%', noise_floor_ppm=20, useFirstOr
 
 
 def save_obspar( opath, y ):
-    print( y.keys() )
-    pdb.set_trace()
+    #print( y.keys() )
+    #pdb.set_trace()
     with open( opath, 'w' ) as f:
         f.write( '\nSETUP\n{0}\n'.format( 50*'-' ) )
         f.write( 'Number of HST orbits = {0:.0f}\n'\
